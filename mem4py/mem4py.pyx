@@ -8,8 +8,7 @@ from readMsh cimport readMsh
 from solver.DR cimport solveKDR
 from solver.transient cimport solveTransient
 from helper.cellCentre cimport cellCentre2D, cellCentre3D
-from writeOutput cimport writeVTK
-
+from writeOutput cimport writeVTK, writeOBJ
 
 class Mem4py:
 
@@ -95,6 +94,19 @@ class Mem4py:
         self.Nc = []
         self.u = []
         self.V = []
+        self.uDot = [] # added 15may23
+        self.uDotDot = [] # added 15may23
+        self.MV = [] # added 15may23
+        self.MinvR = [] # added 15may23
+        self.R = [] # added 15may23       
+        self.RHS0 = [] # added 15may23   
+        self.Minv = [] # added 15may23    
+        self.M = [] # added 15may23       
+        self.diagK = [] # added 15may23 
+        self.qq0 = [] # added 15may23 
+        self.qq = [] # added 15may23 
+        self.Ew = [] # added 15may23 
+        self.RF = [] # added 15may23 
         self.acc = []
         self.dofFixed = []
         self.prescribedDof = []
@@ -245,6 +257,12 @@ class Mem4py:
             props["T"] = 1
         else:
             props["T"] = problem["T"]
+            
+        # simulation start time T0
+        if not "T0" in problem:
+            props["T0"] = 0
+        else:
+            props["T0"] = problem["T0"]
 
         # Gravity or other acceleration field
         if not "gravity" in problem:

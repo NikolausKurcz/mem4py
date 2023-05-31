@@ -464,3 +464,156 @@ cdef int writeVTK(object data) except -1:
 
     if data.silent is False:
         print("Finished writing output to {}".format(name))
+        
+
+
+
+
+
+
+
+cdef int writeOBJ(object data) except -1:
+
+    cdef:
+
+        str inputFile = data.inputName
+
+        unsigned int nnodes = data.nnodes
+        unsigned int nelems = data.nelems
+        unsigned int nelemsMem = data.nelemsMem
+        unsigned int nelemsCable = data.nelemsCable
+
+
+
+        int time = data.time
+        int tLength = data.tLength
+
+        double [:] t = data.t
+
+
+        double [:] X0 = data.X0
+        double [:] Y0 = data.Y0
+        double [:] Z0 = data.Z0
+
+        double [:] u = data.u
+        double [:] V = data.V
+        double [:] acc = data.acc
+
+        double [:] X = data.X
+        double [:] Y = data.Y
+        double [:] Z = data.Z
+
+        int [:, ::1] NMem = data.Nm
+        int [:, ::1] NCable = data.Nc
+
+
+  
+
+ 
+    outputDirectory = "output_mem4py"
+
+
+    if not os.path.exists(outputDirectory):
+           os.makedirs(outputDirectory)
+
+    if time or time == 0:
+        name = "{}/{}_{:0>{}}.obj".format(outputDirectory, inputFile, time, tLength)
+    else:
+        name = "{}/{}.obj".format(outputDirectory,inputFile)
+
+    with open(name, 'w') as fout:
+
+            fout.write('# obj DataFile Version 2.0\n# mem4py OBJ writer\n# POINTS %s float\n' % nnodes)
+
+            # Write deformed node coordinates
+            for n in range(0, nnodes):
+                fout.write('v %s %s %s\n' % (X[n], Y[n], Z[n]))  # initial (X,Y,Z) nodal coordinates
+
+            # Write element connectivity (3 for triangle, 2 for cable)
+            #fout.write('\nCELLS %s %s \n' % (nelems, (nelemsMem * 4 + nelemsCable * 3)))
+
+            if nelemsCable != 0:
+                for el in range(nelemsCable):
+                    fout.write(
+                        'l %s %s\n' % (NCable[el, 1]+1, NCable[el, 2]+1))  # connectivity for cable
+            if nelemsMem != 0:
+                for el in range(nelemsMem):
+                    fout.write(
+                        'f %s %s %s\n' % (NMem[el, 1]+1, NMem[el, 2]+1, NMem[el, 3]+1))  # connectivity for triangle
+
+            
+    if data.silent is False:
+        print("Finished writing output to {}".format(name))
+        
+        
+        
+        
+cdef int writeOBJ_noLines(object data) except -1:
+
+    cdef:
+
+        str inputFile = data.inputName
+
+        unsigned int nnodes = data.nnodes
+        unsigned int nelems = data.nelems
+        unsigned int nelemsMem = data.nelemsMem
+        unsigned int nelemsCable = data.nelemsCable
+
+
+
+        int time = data.time
+        int tLength = data.tLength
+
+        double [:] t = data.t
+
+
+
+        double [:] u = data.u
+        double [:] V = data.V
+        double [:] acc = data.acc
+
+        double [:] X = data.X
+        double [:] Y = data.Y
+        double [:] Z = data.Z
+
+        int [:, ::1] NMem = data.Nm
+        int [:, ::1] NCable = data.Nc
+
+
+  
+
+ 
+    outputDirectory = "output_mem4py"
+
+
+    if not os.path.exists(outputDirectory):
+           os.makedirs(outputDirectory)
+
+    if time or time == 0:
+        name = "{}/{}_{:0>{}}_noLines.obj".format(outputDirectory, inputFile, time, tLength)
+    else:
+        name = "{}/{}_noLines.obj".format(outputDirectory,inputFile)
+
+    with open(name, 'w') as fout:
+
+            fout.write('# obj DataFile Version 2.0\n# mem4py OBJ writer\n# POINTS %s float\n' % nnodes)
+
+            # Write deformed node coordinates
+            for n in range(0, nnodes):
+                fout.write('v %s %s %s\n' % (X[n], Y[n], Z[n]))  # initial (X,Y,Z) nodal coordinates
+
+            # Write element connectivity (3 for triangle, 2 for cable)
+            #fout.write('\nCELLS %s %s \n' % (nelems, (nelemsMem * 4 + nelemsCable * 3)))
+
+            #if nelemsCable != 0:
+            #    for el in range(nelemsCable):
+            #        fout.write(
+            #            'l %s %s\n' % (NCable[el, 1]+1, NCable[el, 2]+1))  # connectivity for cable
+            if nelemsMem != 0:
+                for el in range(nelemsMem):
+                    fout.write(
+                        'f %s %s %s\n' % (NMem[el, 1]+1, NMem[el, 2]+1, NMem[el, 3]+1))  # connectivity for triangle
+
+            
+    if data.silent is False:
+        print("Finished writing output to {}".format(name))
