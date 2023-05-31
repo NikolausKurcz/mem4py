@@ -102,6 +102,7 @@ cdef int solveTransient(object data) except -1:
         double beta =  data.props["beta"]
         double dt =    data.props["dt"]
         double T =     data.props["T"]
+        double T0 =    data.props["T0"]
 
         double epsilonKE = data.solverOptions["epsilon_KE"]
         double epsilonR =  data.solverOptions["epsilon_R"]
@@ -130,8 +131,31 @@ cdef int solveTransient(object data) except -1:
         beta = 0
     if T == 0:
         raise Exception("No time defined.")
+    if T0 is None:
+        T0 = 0    
 
     damper = data.loadedBCNodes_damper
+    
+    
+    # if T0 = 0, need to consider initial values for V, 
+    
+    if T0 > 0:
+        V = data.V 
+        RHS = data.RHS
+        Fint = data.Fint
+        uDot = data.uDot
+        uDotDot = data.uDotDot    
+        MV = data.MV
+        MinvR = data.MinvR
+        R = data.R       
+        RHS0 = data.RHS0    
+        Minv = data.Minv    
+        M = data.M       
+        diagK = data.diagK   
+        qq0 = data.qq0
+        Ew = data.Ew
+        RF = data.RF
+
 
     # assemble inverse mass matrix as vector format
     assembleM(NMem, NCable, M, Minv, area3, L0, thickness, area2, rho3, rho2, nelemsMem, nelemsCable, dim)
@@ -197,7 +221,7 @@ cdef int solveTransient(object data) except -1:
 
     integrator.set_integrator("vode", method='bdf', order=15, nsteps=3000)#, rtol=1E-16, nsteps=50000)
 
-    integrator.set_initial_value(qq0, 0).set_f_params(X, Y, Z, X0, Y0, Z0, Minv, Fint, RHS, RHS0, uDot, uDotDot,
+    integrator.set_initial_value(qq0, T0).set_f_params(X, Y, Z, X0, Y0, Z0, Minv, Fint, RHS, RHS0, uDot, uDotDot,
                                                      NMem, NCable, area3, L0, elPressurised, elFSI, p, Sx, Sy, Sz,
                                                      pFSI, loadedBCNodes, loadedBCEdges, loadedBCSurface, dofFixed, dim, nnodes, ndof,
                                                      gravity, nelemsMem, nelemsCable, rho3, area2, rho2,
@@ -208,91 +232,12 @@ cdef int solveTransient(object data) except -1:
                                                      pre_stress_cable, pre_strain_cable, pre_stress_membrane,
                                                      pre_strain_membrane, pre_active, damper, data.aero)
 
-    counter = 0
-    data.time = 0
+    counter = data.time
+    #data.time = 0
 
-    time_array = np.linspace(0., T, int(T/dt + 1))
+    time_array = np.linspace(T0, T, int((T-T0)/dt + 1))
 
-    # from scipy.integrate import odeint
-    # solution = odeint(firstOrderSystemNonlinear, qq0, time_array, args=(X, Y, Z, X0, Y0, Z0, Minv, Fint, RHS, RHS0, uDot, uDotDot,
-    #                                                                    NMem, NCable, area3, L0, elPressurised, elFSI, p, Sx, Sy, Sz,
-    #                                                                    pFSI, loadedBCNodes, loadedBCEdges, dofFixed, dim, nnodes, ndof,
-    #                                                                    gravity, nelemsMem, nelemsCable, rho3, area2, rho2,
-    #                                                                    J11Vec, J22Vec,J12Vec, E3, E2, nu, thickness, alpha, beta,
-    #                                                                    thetaVec, Ew, order, indices, indptr, dataK, diagK, wrinkling,
-    #                                                                    g, i, wrinklingFlag, nPressurised, nFSI, state, force_vector,
-    #                                                                    P, theta_vec, wrinkling_iter, iter_goal, sigma_max,
-    #                                                                    pre_stress_cable, pre_strain_cable, pre_stress_membrane,
-    #                                                                    pre_strain_membrane, pre_active, damper))
-
-    # # write output files
-    # for time_step in range(np.size(solution, 1)):
-    #
-    #     if time_step % data.writeInterval == 0:
-    #
-    #         u_vec = solution[time_step, 0:ndof]
-    #         v_vec = solution[time_step, ndof::]
-    #
-    #         # update current configuration
-    #         if dim == 2:
-    #             for i in range(nnodes):
-    #                 X[i] = X0[i] + u_vec[2 * (i + 1) - 2]
-    #                 Y[i] = Y0[i] + u_vec[2 * (i + 1) - 1]
-    #         elif dim == 3:
-    #             for i in range(nnodes):
-    #                 X[i] = X0[i] + u_vec[3 * (i + 1) - 3]
-    #                 Y[i] = Y0[i] + u_vec[3 * (i + 1) - 2]
-    #                 Z[i] = Z0[i] + u_vec[3 * (i + 1) - 1]
-    #
-    #         # RHS vector in current configuration
-    #         assembleRHS(X, Y, Z, u_vec, NMem, NCable, p, RHS, RHS0, elPressurised, elFSI, area3, L0, gravity,
-    #                     nelemsMem, nelemsCable, nPressurised, nFSI, thickness, rho3, area2, rho2, g, Sx, Sy, Sz,
-    #                     pFSI, loadedBCNodes, loadedBCEdges, RHS0flag, 1, dim, force_vector, E2,
-    #                     pre_stress_cable, pre_strain_cable, pre_stress_membrane, pre_strain_membrane,
-    #                     pre_active, J11Vec, J22Vec, J12Vec, thetaVec, E3, nu)
-    #
-    #         computeuDotDot(Minv, X, Y, Z, NMem, NCable, J11Vec, J22Vec, J12Vec, nelemsMem, nelemsCable, ndof, E3, E2,
-    #                        nu, thickness, area2, alpha, beta, thetaVec, area3, L0, Fint, RHS, Ew, p, order, indices,
-    #                        indptr, state, dataK, uDot, uDotDot, diagK, dim, wrinklingFlag, P, theta_vec, wrinkling_iter,
-    #                        iter_goal, sigma_max, damper)
-    #
-    #         # Update data object
-    #         data.X = X
-    #         data.Y = Y
-    #         data.Z = Z
-    #         data.u = u_vec
-    #         data.V = v_vec
-    #         data.RHS = RHS
-    #         data.Ew = Ew
-    #         data.RF = RF
-    #         data.Fint = Fint
-    #         data.R = R
-    #         data.M = M
-    #
-    #         data.P = P
-    #         data.theta_vec = theta_vec
-    #
-    #         data.time = time_step
-    #
-    #         # Write output into vtk file
-    #         if data.autoWrite is True:
-    #             writeVTK(data)
-    #
-    #
-    # import matplotlib.pyplot as plt
-    # plt.subplot(2,1,1)
-    # plt.plot(time_array, solution[:,ndof-2])
-    # plt.grid()
-    # plt.ylabel('Position [m]')
-    #
-    # plt.subplot(2,1,2)
-    # plt.plot(time_array, solution[:,2*ndof-1])
-    # plt.grid()
-    # plt.ylabel('Velocity [m/s]')
-    # plt.xlabel('Time [s]')
-    #
-    # plt.savefig('pos_and_vel_vs_time.png')
-
+   
 
 
     for time_ind in range(1, len(time_array)):
@@ -304,52 +249,71 @@ cdef int solveTransient(object data) except -1:
         data.kinetic_energy.append(qq[ndof-38])
         data.strain_energy.append(qq[2*ndof-38])
 
-        if counter % data.writeInterval == 0:
+        #if counter % data.writeInterval == 0:
 
-            if data.silent is False:
-                print("current time = {}".format(integrator.t))
+        if data.silent is False:
+            print("current time = {}".format(integrator.t))
 
-            q1, q2 = np.reshape(qq, (2, -1))
+        q1, q2 = np.reshape(qq, (2, -1))
 
             # update current configuration
-            if dim == 2:
-                for i in range(nnodes):
-                    X[i] = X0[i] + q1[2 * (i + 1) - 2]
-                    Y[i] = Y0[i] + q1[2 * (i + 1) - 1]
-            elif dim == 3:
-                for i in range(nnodes):
-                    X[i] = X0[i] + q1[3 * (i + 1) - 3]
-                    Y[i] = Y0[i] + q1[3 * (i + 1) - 2]
-                    Z[i] = Z0[i] + q1[3 * (i + 1) - 1]
+        if dim == 2:
+            for i in range(nnodes):
+                X[i] = X0[i] + q1[2 * (i + 1) - 2]
+                Y[i] = Y0[i] + q1[2 * (i + 1) - 1]
+        elif dim == 3:
+            for i in range(nnodes):
+                X[i] = X0[i] + q1[3 * (i + 1) - 3]
+                Y[i] = Y0[i] + q1[3 * (i + 1) - 2]
+                Z[i] = Z0[i] + q1[3 * (i + 1) - 1]
 
             # Update data object
-            data.X = X
-            data.Y = Y
-            data.Z = Z
-            data.u = q1
-            data.V = q2
-            data.RHS = RHS
-            data.Ew = Ew
-            data.RF = RF
-            data.Fint = Fint
-            data.R = R
-            data.M = M
+        data.X = X
+        data.Y = Y
+        data.Z = Z
+        data.u = q1
+        data.V = q2
+        data.RHS = RHS
+        data.Ew = Ew
+        data.RF = RF
+        data.Fint = Fint
+        data.R = R
+        data.M = M
+        data.uDot = uDot
+        data.uDotDot = uDotDot
+        data.MV = MV
+        data.MinvR = MinvR
+        data.R = R       
+        data.RHS0 = RHS0    
+        data.Minv = Minv    
+        data.M = M       
+        data.diagK = diagK 
+        data.qq0 = qq0
+        data.qq = qq
+        data.P = P
+        data.theta_vec = theta_vec
 
-            data.P = P
-            data.theta_vec = theta_vec
-
-            data.time = counter
-
+        data.time = counter
+            
+        data.J11Vec = J11Vec 
+        data.J12Vec = J12Vec 
+        data.J22Vec = J22Vec 
+            
+        data.Ew = Ew
+        data.RF = RF
+        #data.t = t
+            
+            
             # Write output into vtk file
-            if data.autoWrite is True:
-                writeVTK(data)
+        if data.autoWrite is True:
+            writeVTK(data)
 
-        counter += 1
+    counter += 1
 
     data.time_array = time_array
 
     # reset displacements
-    u[...] = 0.
+    #u[...] = 0.
 
 
 def firstOrderSystemNonlinear(t, qq, X, Y, Z, X0, Y0, Z0, Minv, Fint, RHS, RHS0, uDot, uDotDot, NMem, NCable, area3,

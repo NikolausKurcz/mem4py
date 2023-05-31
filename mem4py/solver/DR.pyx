@@ -11,6 +11,8 @@ from assembler.RHS cimport assembleRHS
 from helper.sparse cimport sparsityPattern
 from helper.dirichletHandler cimport correctBC
 from writeOutput cimport writeVTK
+from writeOutput cimport writeOBJ
+from writeOutput cimport writeOBJ_noLines
 from ceygen.ceygenMath cimport dot_vv
 from ceygen.ceygenMath cimport add_vv
 from ceygen.ceygenMath cimport subtract_vv
@@ -414,6 +416,29 @@ cdef int solveKDR(object data) except -1:
                 n_peaks += 1
 
                 break
+            
+        if data.write_each_peak is True:
+            # Update data object
+            data.X = X
+            data.Y = Y
+            data.Z = Z
+            data.u = u
+            data.V = V
+            data.RHS = RHS
+            data.RF = RF
+            data.Fint = Fint
+            data.R = R
+            data.P = P
+            data.alpha_array = alpha_array
+            data.KEVec = KEVec
+            data.KEpeak = KEpeak
+            data.KE = KE
+            data.IE = IE
+            data.M = M
+            data.time = writeIter
+            writeIter += 1
+            # Write output into vtk file
+            writeVTK(data)    
 
     # if data.silent is False:
     if outerIter < maxIterDR:
@@ -456,6 +481,8 @@ cdef int solveKDR(object data) except -1:
     # Write output into vtk file
     if data.autoWrite is True:
         writeVTK(data)
+        writeOBJ(data)
+        writeOBJ_noLines(data)
 
     # TODO: OLD IMPLEMENTATION, kinda messy
     # # start DR
