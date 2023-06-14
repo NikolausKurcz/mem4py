@@ -149,12 +149,9 @@ cdef int assemble_M_DR(double [:] M,
                     pLocal = p[indP]
                     indP += 1
             if nFSI != 0:
-                try:
-                    if el == elFSI[indFSI]:
-                        pLocal += pFSI[indFSI]
-                        indFSI += 1
-                except:
-                    pass
+                if el == elFSI[indFSI]:
+                    pLocal += pFSI[indFSI]
+                    indFSI += 1
                 
             membrane2DKmat(X, Y, NMem, SLocal, Fint, t[el], area3[el], pLocal*loadStep, el, J11Vec[el], J22Vec[el],
                            J12Vec[el], E3[el], nu[el], data, diagK, index, order)
@@ -203,10 +200,12 @@ cdef int assemble_M_DR(double [:] M,
                     pLocal = p[indP]
                     indP += 1
             if nFSI != 0:
-                if el == elFSI[indFSI]:
-                    pLocal += pFSI[indFSI]
-                    indFSI += 1
-
+                try:
+                    if el == elFSI[indFSI]:
+                        pLocal += pFSI[indFSI]
+                        indFSI += 1
+                except:
+                    pass
             membrane3DKmat(X, Y, Z, NMem, SLocal, Fint, t[el], area3[el], pLocal*loadStep, el, J11Vec[el], J22Vec[el],
                            J12Vec[el], E3[el], nu[el], data, diagK, index, order)
 
