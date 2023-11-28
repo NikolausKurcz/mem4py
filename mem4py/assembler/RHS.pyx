@@ -396,15 +396,15 @@ cdef int assembleRHS(double [:] X,
             # loop through nodal loads
             for el in range(np.size(loadedBCNodes, 0)):
 
-                if loadedBCNodes[el, 0] == 11:
+                if loadedBCNodes[el, 0] == 1:
                     dof1 = 3 * int(loadedBCNodes[el, 1] + 1) - 3
                     RHS[dof1] += loadStep * loadedBCNodes[el, 2]
 
-                elif loadedBCNodes[el, 0] == 12:
+                elif loadedBCNodes[el, 0] == 2:
                     dof1 = 3 * int(loadedBCNodes[el, 1] + 1) - 2
                     RHS[dof1] += loadStep * loadedBCNodes[el, 2]
 
-                elif loadedBCNodes[el, 0] == 13:
+                elif loadedBCNodes[el, 0] == 3:
                     dof1 = 3 * int(loadedBCNodes[el, 1] + 1) - 1
                     RHS[dof1] += loadStep * loadedBCNodes[el, 2]
 
