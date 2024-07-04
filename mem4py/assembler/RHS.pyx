@@ -396,15 +396,15 @@ cdef int assembleRHS(double [:] X,
             # loop through nodal loads
             for el in range(np.size(loadedBCNodes, 0)):
 
-                if loadedBCNodes[el, 0] == 11:
+                if loadedBCNodes[el, 0] == 1:
                     dof1 = 3 * int(loadedBCNodes[el, 1] + 1) - 3
                     RHS[dof1] += loadStep * loadedBCNodes[el, 2]
 
-                elif loadedBCNodes[el, 0] == 12:
+                elif loadedBCNodes[el, 0] == 2:
                     dof1 = 3 * int(loadedBCNodes[el, 1] + 1) - 2
                     RHS[dof1] += loadStep * loadedBCNodes[el, 2]
 
-                elif loadedBCNodes[el, 0] == 13:
+                elif loadedBCNodes[el, 0] == 3:
                     dof1 = 3 * int(loadedBCNodes[el, 1] + 1) - 1
                     RHS[dof1] += loadStep * loadedBCNodes[el, 2]
 
@@ -493,11 +493,11 @@ cdef int assembleRHS(double [:] X,
                     alpha = np.arccos(np.dot(e_hor, e_flow))
                     theta = alpha + np.pi / 2
 
-                    print("e_line = {}".format(e_line))
-                    print("e_flow = {}".format(e_flow))
-                    print("e_lat = {}".format(e_lat))
-                    print("e_hor = {}".format(e_hor))
-                    print("alpha = {}".format(theta*180/np.pi))
+                    #print("e_line = {}".format(e_line))
+                    #print("e_flow = {}".format(e_flow))
+                    #print("e_lat = {}".format(e_lat))
+                    #print("e_hor = {}".format(e_hor))
+                    #print("alpha = {}".format(theta*180/np.pi))
 
                     # lift and drag coefficients
                     Cl = aero['Cn']*cos(theta)*sin(theta)**2
@@ -508,11 +508,11 @@ cdef int assembleRHS(double [:] X,
                     Cy = e_flow[1] * Cl + e_vert[1] * Cd
                     Cz = e_flow[2] * Cl + e_vert[2] * Cd
 
-                    print("Cl = {}".format(Cl))
-                    print("Cd = {}".format(Cd))
-                    print("Cx = {}".format(Cx))
-                    print("Cy = {}".format(Cy))
-                    print("Cz = {}".format(Cz))
+                    #print("Cl = {}".format(Cl))
+                    #print("Cd = {}".format(Cd))
+                    #print("Cx = {}".format(Cx))
+                    #print("Cy = {}".format(Cy))
+                    #print("Cz = {}".format(Cz))
                     
                     # loadedBCEdges[el, 3] = diameter * rho * V_magnitude_average_over_line_length**2
                     RHS[allDofCable[0]] += loadStep * Cx * l * loadedBCEdges[el, 3] / 2  # x1
@@ -636,7 +636,7 @@ cdef int assembleRHS(double [:] X,
             RHS[allDofMem[8]] += fz
 
         # Loop through all pressurised elements
-        for el in range(nFSI):
+        for el in range(nFSI): 
 
             # Find degrees of freedom from current element
             allDofMem[0] = 3 * (NMem[elFSI[el], 1] + 1) - 3
