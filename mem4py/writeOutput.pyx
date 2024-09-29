@@ -617,3 +617,69 @@ cdef int writeOBJ_noLines(object data) except -1:
             
     if data.silent is False:
         print("Finished writing output to {}".format(name))
+
+
+
+cdef int writeOBJ_elFSI(object data) except -1:
+
+    cdef:
+
+        str inputFile = data.inputName
+
+        unsigned int nnodes = data.nnodes
+        
+        unsigned int nelemsMem = data.nFSI
+       
+        unsigned int [:] elFSI = data.elFSI
+
+
+
+        int time = data.time
+        int tLength = data.tLength
+
+        double [:] t = data.t
+
+
+
+        double [:] u = data.u
+        double [:] V = data.V
+        double [:] acc = data.acc
+
+        double [:] X = data.X
+        double [:] Y = data.Y
+        double [:] Z = data.Z
+
+        int [:, ::1] NMem = data.Nm
+        int [:, ::1] NCable = data.Nc
+
+
+  
+
+ 
+    outputDirectory = "output_mem4py"
+
+
+    if not os.path.exists(outputDirectory):
+           os.makedirs(outputDirectory)
+
+    if time or time == 0:
+        name = "{}/{}_{:0>{}}_elFSI.obj".format(outputDirectory, inputFile, time, tLength)
+    else:
+        name = "{}/{}_elFSI.obj".format(outputDirectory,inputFile)
+
+    with open(name, 'w') as fout:
+
+            fout.write('# obj DataFile Version 2.0\n# mem4py OBJ writer\n# POINTS %s float\n' % nnodes)
+
+            # Write deformed node coordinates
+            for n in range(0, nnodes):
+                fout.write('v %s %s %s\n' % (X[n], Y[n], Z[n]))  # initial (X,Y,Z) nodal coordinates
+
+            if nelemsMem != 0:
+                for el in elFSI:
+                    fout.write(
+                        'f %s %s %s\n' % (NMem[el, 1]+1, NMem[el, 2]+1, NMem[el, 3]+1))  # connectivity for triangle
+
+            
+    if data.silent is False:
+        print("Finished writing output to {}".format(name))

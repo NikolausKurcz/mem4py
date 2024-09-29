@@ -13,6 +13,7 @@ from helper.dirichletHandler cimport correctBC
 from writeOutput cimport writeVTK
 from writeOutput cimport writeOBJ
 from writeOutput cimport writeOBJ_noLines
+from writeOutput cimport writeOBJ_elFSI
 from ceygen.ceygenMath cimport dot_vv
 from ceygen.ceygenMath cimport add_vv
 from ceygen.ceygenMath cimport subtract_vv
@@ -481,8 +482,9 @@ cdef int solveKDR(object data) except -1:
     # Write output into vtk file
     if data.autoWrite is True:
         writeVTK(data)
-        writeOBJ(data)
-        writeOBJ_noLines(data)
+        #writeOBJ(data)
+        #writeOBJ_noLines(data)
+        writeOBJ_elFSI(data)
 
     # TODO: OLD IMPLEMENTATION, kinda messy
     # # start DR
