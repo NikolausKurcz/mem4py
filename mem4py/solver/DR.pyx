@@ -156,6 +156,8 @@ cdef int solveKDR(object data) except -1:
 
         double u_max = data.solverOptions["displacement_limit"]
 
+    u_max = u_max + np.max(np.linalg.norm(u))
+
     # aero input
     aero = data.aero
 
@@ -348,7 +350,7 @@ cdef int solveKDR(object data) except -1:
                     Z[i] = Z0[i] + u[3 * (i + 1) - 1]
 
             # check if displacement os above limit
-            if np.max(np.abs(u)) > u_max:
+            if np.max(np.linalg.norm(u)) > u_max:  
                 print("Displacement limit reached in iteration {}.".format(iteration))
                 break
 
