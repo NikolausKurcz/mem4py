@@ -154,6 +154,8 @@ cdef int solveKDR(object data) except -1:
 
         unsigned int [:] pre_active = data.pre_active
 
+        double u_max = data.solverOptions["displacement_limit"]
+
     # aero input
     aero = data.aero
 
@@ -333,6 +335,7 @@ cdef int solveKDR(object data) except -1:
             # compute nodal displacements
             add_vv(u, V, u)
 
+        
             # write displacements into position vector
             if dim == 2:
                 for i in range(nnodes):
@@ -343,6 +346,13 @@ cdef int solveKDR(object data) except -1:
                     X[i] = X0[i] + u[3 * (i + 1) - 3]
                     Y[i] = Y0[i] + u[3 * (i + 1) - 2]
                     Z[i] = Z0[i] + u[3 * (i + 1) - 1]
+
+            # check if displacement os above limit
+            if np.max(np.abs(u)) > u_max:
+                print("Displacement limit reached in iteration {}.".format(iteration))
+                break
+
+            
 
             # Determine kinetic energy and update previous KE values
             KEOldOld = KEOld

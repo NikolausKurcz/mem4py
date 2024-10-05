@@ -491,6 +491,11 @@ class Mem4py:
         else:
             solverOptions["maxIterDR"] = problem["maxIterDR"]
 
+        # maximum displacement 
+        solverOptions["displacement_limit"] = 1000
+        if "displacement_limit" in problem:
+            solverOptions["displacement_limit"] = problem["displacement_limit"]
+
         # Insert dicts into object attributes
         self.props = props
         self.load = load
